@@ -1,2 +1,0 @@
-
-    sum += int(number)
