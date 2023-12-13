@@ -1,5 +1,5 @@
 import re
-from typing import Generator, Tuple, List
+from typing import List, Tuple
 
 # Open the file and read the lines into a list
 lines: List[str] = open("./input.txt").read().splitlines()
@@ -18,49 +18,51 @@ def is_symbol(char: str) -> bool:
     return char != "." and not char.isdigit()
 
 
-def get_numbers() -> Generator[Tuple[int, str, int, int, int], None, None]:
+def get_parts() -> List[List[Tuple[int, int, int]]]:
     """
-    Generates tuples containing the line index, line content, start index, end index, and number for each number in the lines.
+    Extracts the parts from the lines.
+
+    Returns:
+    List[List[Tuple[int, int, int]]]: A list of parts for each line.
     """
+    parts: List[List[Tuple[int, int, int]]] = []
     for i, line in enumerate(lines):
-        # Loop over each number in the line
+        parts.append([])
+
+        # Find all numbers in the line
         for match in re.finditer(r"\d+", line):
             start_index = match.start(0) - 1
             end_index = match.end(0)
             number = int(match.group(0))
-            yield i, line, start_index, end_index, number
+            part = (start_index, end_index, number)
+            parts[i].append(part)
+
+    return parts
 
 
 count = 0
+parts: List[List[Tuple[int, int, int]]] = get_parts()
 
-# Iterate over the generated tuples
-for (
-    i,
-    line,
-    start_index,
-    end_index,
-    number,
-) in get_numbers():
-    # Check if number is not surrounded by symbols
-    if (start_index >= 0 and is_symbol(line[start_index])) or (
-        end_index < len(line) and is_symbol(line[end_index])
-    ):
-        count += number
-        continue
-
-    # Check if number is surrounded by symbols on the line above or below
-    # the current line
-    # loop over each digit in the number
-    for j in range(start_index, end_index + 1):
-        # Check if we are at the end of the line
-        if j >= len(line):
+for i, line in enumerate(lines):
+    for j, char in enumerate(line):
+        if char != "*":
             continue
 
-        # Check the line above and below for symbols
-        if (i > 0 and is_symbol(lines[i - 1][j])) or (
-            i < len(lines) - 2 and is_symbol(lines[i + 1][j])
-        ):
-            count += number
-            break
+        adjacent_parts: List[int] = []
+
+        # Loop over the line above, the current line, and the line below
+        for k in range(-1, 2):
+            # Check if the line exists
+            if i + k < 0 or i + k > len(lines):
+                continue
+
+            # Loop over each part in the line
+            for start_index, end_index, number in parts[i + k]:
+                if start_index <= j <= end_index:
+                    adjacent_parts.append(number)
+
+        # If there are two adjacent parts, multiply them and add to the count
+        if len(adjacent_parts) == 2:
+            count += adjacent_parts[0] * adjacent_parts[1]
 
 print(count)
