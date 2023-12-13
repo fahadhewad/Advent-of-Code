@@ -8,9 +8,12 @@ input = big_string
 
 arr = input.split('\n')
 
-sum = 0
+c = {}
 
-for card in arr:
+for i, card in enumerate(arr):
+    if i not in c:
+        c[i] = 1
+    
     count = 0
     x, y = card.split(':')
     x, y = y.split('|')
@@ -18,9 +21,9 @@ for card in arr:
     numbers = y.strip().split()
     for number in numbers:
         if number in winners:
-            if count == 0:
-                count = 1
-            else:
-                count *= 2
-    sum += count
-print(sum)
+            count += 1
+    
+    for n in range(i + 1, i + count + 1, 1):
+        c[n] = c.get(n, 1) + c[i]
+
+print(sum(c.values()))
